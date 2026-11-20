@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scanner ISBN</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f3;
+      color: #333;
+      padding: 25px 15px;
+      text-align: center;
+    }
+
+    .conteneur {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    h1 { color: #42634c; }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 8px;
+      background: #557c60;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #lecteur { margin-top: 20px; }
+
+    #resultat {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="conteneur">
+    <h1>Scanner un livre</h1>
+    <p>Place le code-barres ISBN devant la caméra.</p>
+
+    <div id="lecteur"></div>
+
+    <p id="resultat"></p>
+
+    <button id="demarrer" onclick="demarrerScanner()">
+      Ouvrir l'appareil photo
+    </button>
+
+    <button id="retour" onclick="retourBibliotheque()"
+      style="display:none">
+      Retour à la bibliothèque
+    </button>
+  </div>
+
+  <script>
+    const URL_BIBLIOTHEQUE =
+      "https://script.google.com/macros/s/AKfycbxINzkrLCyGghprxXqbLJ6Y2ph5qCN21at-CKIwFINWSZVYrVJH0W8eVa22ZOPVe2hxsA/exec";
+
+    let scanner = null;
+    let isbnDetecte = "";
+
+    function demarrerScanner() {
+      if (typeof Html5Qrcode === "undefined") {
+        document.getElementById("resultat").textContent =
+          "Le lecteur de codes-barres n'a pas pu être chargé.";
+        return;
+      }
+
+      scanner = new Html5Qrcode("lecteur");
+
+      scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 280, height: 130 },
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13
+          ]
+        },
+        (texte) => {
+          if (!/^(978|979)\d{10}$/.test(texte)) {
+            document.getElementById("resultat").textContent =
+              "Ce code ne semble pas être un ISBN.";
+            return;
+          }
+
+          isbnDetecte = texte;
+
+          scanner.stop().then(() => {
+            document.getElementById("resultat").textContent =
+              "ISBN détecté : " + isbnDetecte;
+
+            document.getElementById("demarrer").style.display = "none";
+            document.getElementById("retour").style.display = "block";
+          });
+        },
+        () => {}
+      ).catch((erreur) => {
+        document.getElementById("resultat").textContent =
+          "Impossible d'ouvrir la caméra. Vérifie ses autorisations.";
+      });
+    }
+
+    function retourBibliotheque() {
+      window.location.href = URL_BIBLIOTHEQUE +
+        "?isbn=" + encodeURIComponent(isbnDetecte);
+    }
+  </script>
+</body>
+</html>
