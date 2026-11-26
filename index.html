@@ -62,9 +62,8 @@
       Ouvrir l'appareil photo
     </button>
 
-    <button id="retour" onclick="retourBibliotheque()"
-      style="display:none">
-      Retour à la bibliothèque
+    <button id="retour" onclick="retourBibliotheque()">
+    Retour à la bibliothèque
     </button>
   </div>
 
@@ -118,8 +117,21 @@
     }
 
     function retourBibliotheque() {
-      window.location.href = URL_BIBLIOTHEQUE +
-        "?isbn=" + encodeURIComponent(isbnDetecte);
+      const url = isbnDetecte
+      ? URL_BIBLIOTHEQUE + "?isbn=" + encodeURIComponent(isbnDetecte)
+      : URL_BIBLIOTHEQUE;
+
+      if (scanner) {
+        scanner.stop()
+        .then(() => {
+          window.location.href = url;
+        })
+        .catch(() => {
+          window.location.href = url;
+        });
+      } else {
+      window.location.href = url;
+      }
     }
   </script>
 </body>
